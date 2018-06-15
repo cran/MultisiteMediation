@@ -1,0 +1,54 @@
+% Please edit documentation in R/msmediate.R
+\name{vartest.msmediate.weights}
+\alias{vartest.msmediate.weights}
+\title{Variance testing for multisite causal mediation analysis in the presence of complex sample and survey designs and non-random nonresponse}
+\usage{
+vartest.msmediate.weights(data, y, treatment, mediator, response, XR1, XR0, XM1, 
+    XM0, site, sample.weight, npermute = 200)
+}
+\arguments{
+\item{data}{The data set for analysis.}
+
+\item{y}{The name of the outcome variable (string).}
+
+\item{treatment}{The name of the treatment variable (string).}
+
+\item{mediator}{The name of the mediator variable (string).}
+
+\item{response}{The name of the response variable (string), which is equal to 1 if the individual responded and 0 otherwise.}
+
+\item{XR1}{A vector of variable names (string) of pretreatment covariates in the propensity score model for the response under the treatment condition. The function will treat covariates with fewer than 10 unique values as categorical variables. For now, the multilevel propensity score model only allows for one random intercept.}
+
+\item{XR0}{A vector of variable names (string) of pretreatment covariates in the propensity score model for the response under the control condition. The function will treat covariates with fewer than 10 unique values as categorical variables. For now, the multilevel propensity score model only allows for one random intercept.}
+
+\item{XM1}{A vector of variable names (string) of pretreatment covariates in the propensity score model for the mediator under the treatment condition. The function will treat covariates with fewer than 10 unique values as categorical variables. For now, the multilevel propensity score model only allows for one random intercept.}
+
+\item{XM0}{A vector of variable names (string) of pretreatment covariates in the propensity score model for the mediator under the control condition. The function will treat covariates with fewer than 10 unique values as categorical variables. For now, the multilevel propensity score model only allows for one random intercept.}
+
+\item{site}{The variable name for the site ID (string).}
+
+\item{sample.weight}{The variable name for the sample weight given by design (string).}
+
+\item{npermute}{The number of permutations for the permutation test. The default value is 200. It may take a long time, depending on the sample size and the length of X.}
+}
+\value{
+A list contains the hypothesis testing results of the between-site variance of the causal effects, besides the same output as given by the function msmediate().
+}
+\description{
+This function performs hypothesis testing for the between-site variances of natural direct effect, natural indirect effect, pure indirect effect, and treatment-by-mediator interaction effect in the presence of complex sample and survey designs and non-random nonresponse, besides providing the same output as given by the function msmediate.weights().
+}
+\examples{
+data(sim.weights)
+
+vartest.msmediate.weights(data = sim.weights, y = "y", treatment = "tr", 
+    mediator = "me", response = "R", XR1 = c("x1", "x2", "x3"), XR0 = c("x1", 
+        "x2", "x3"), XM1 = c("x1", "x2", "x3"), XM0 = c("x1", "x2", "x3"), 
+    site = "site", sample.weight = "WD", npermute = 2)
+
+}
+\references{
+Qin, X., Hong, G ., Deutsch, J., & Bein, E. (under review). A Multisite causal mediation analysis in the presence of complex sample and survey designs and non-random nonresponse.
+}
+\author{
+Xu Qin, Guanglei Hong, Jonah Deutsch, and Edward Bein
+}

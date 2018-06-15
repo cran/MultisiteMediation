@@ -1,7 +1,7 @@
 % Please edit documentation in R/msmediate.R
 \docType{data}
-\name{sim}
-\alias{sim}
+\name{sim.weights}
+\alias{sim.weights}
 \title{A simulated example data}
 \value{
 A list containing
@@ -12,7 +12,8 @@ A list containing
 \item{x1}{Pretreatment covariate}
 \item{x2}{Pretreatment covariate}
 \item{x3}{Pretreatment covariate}
-\item{x4}{Pretreatment covariate}
+\item{R}{Response indicator}
+\item{WD}{Sample weight}
 }
 \description{
 This simulated data list is for demonstration.

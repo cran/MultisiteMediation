@@ -1,7 +1,7 @@
 % Please edit documentation in R/msmediate.R
 \name{vartest.msmediate}
 \alias{vartest.msmediate}
-\title{Include Variance Testing for Multisite Causal Mediation Analysis}
+\title{Variance testing for multisite causal mediation analysis}
 \usage{
 vartest.msmediate(data, y, treatment, mediator, X, site, npermute = 200)
 }
@@ -14,7 +14,7 @@ vartest.msmediate(data, y, treatment, mediator, X, site, npermute = 200)
 
 \item{mediator}{The name of the mediator variable (string).}
 
-\item{X}{A vector of variable names (string) of pretreatment confounders, which will be included in the propensity score model. For now, the multilevel propensity score model only allows for one random intercept.}
+\item{X}{A vector of variable names (string) of pretreatment covariates, which will be included in the propensity score model. The function will treat covariates with fewer than 10 unique values as categorical variables. For now, the multilevel propensity score model only allows for one random intercept.}
 
 \item{site}{The variable name for the site ID (string).}
 
@@ -24,17 +24,17 @@ vartest.msmediate(data, y, treatment, mediator, X, site, npermute = 200)
 A list contains the hypothesis testing results of the between-site variance of the causal effects, besides the same output as given by the function msmediate().
 }
 \description{
-Performs hypothesis testing for the between-site variance of direct effect and that of indirect effect, besides providing the same output as given by the function msmediate().
+This function performs hypothesis testing for the between-site variance of direct effect and that of indirect effect, besides providing the same output as given by the function msmediate().
 }
 \examples{
 data(sim)
 
 vartest.msmediate(data = sim, y = "y", treatment = "tr", mediator = "me", X = c("x1", 
-    "x2", "x3"), site = "site", npermute = 2)
+    "x2", "x3", "x4"), site = "site", npermute = 2)
 
 }
 \references{
-Qin, X., & Hong, G (in press). A weighting method for assessing between-site heterogeneity in causal mediation mechanism. Journal of Educational and Behavioral Statistics.
+Qin, X., & Hong, G (2017). A weighting method for assessing between-site heterogeneity in causal mediation mechanism. Journal of Educational and Behavioral Statistics. Journal of Educational and Behavioral Statistics. Journal of Educational and Behavioral Statistics, 42(3), 308-340. \doi{10.3102/1076998617694879}
 }
 \author{
 Xu Qin and Guanglei Hong
