@@ -1,7 +1,7 @@
 % Please edit documentation in R/msmediate.R
 \name{sensitivity}
 \alias{sensitivity}
-\title{Sensitivity analysis for causal mediation analysis in multisite trials}
+\title{Sensitivity analysis for causal mediation analysis in multisite trials in the presence of complex sample and survey designs and non-random nonresponse}
 \usage{
 sensitivity(data, y, treatment, mediator, response, XR1, XR0, XM1, XM0, omit.X = NULL, 
     ran.omit.X = 1, site)
@@ -32,7 +32,7 @@ sensitivity(data, y, treatment, mediator, response, XR1, XR0, XM1, XM0, omit.X =
 \item{site}{The variable name for the site ID (string).}
 }
 \value{
-A list contains sensitivity parameters and the effect size of bias due to omission of pretreatment confounders ($`Bias due to omission of confounders) or random slopes ($`Bias due to omission of random slopes) for each causal parameter ($ITT for the population average ITT effect, $var.ITT for the between-site variance of ITT effect; $NIE for the population average natural indirect effect, $var.NIE for the between-site variance of natural indirect effect; $NDE for the population average natural direct effect, $var.NDE for the between-site variance of natural direct effect; $cov.NIE.NDE for the between-site covariance between natural indirect and direct effects; $PIE for the population average pure indirect effect; and $ INT for the population average natural treatment-by-mediator interaction effect.
+A list contains sensitivity parameters and the effect size of bias due to omission of pretreatment confounders ($Bias due to omission of confounders) or random slopes ($Bias due to omission of random slopes) for each causal parameter ($ITT for the population average ITT effect, $var.ITT for the between-site variance of ITT effect; $NIE for the population average natural indirect effect, $var.NIE for the between-site variance of natural indirect effect; $NDE for the population average natural direct effect, $var.NDE for the between-site variance of natural direct effect; $cov.NIE.NDE for the between-site covariance between natural indirect and direct effects; $PIE for the population average pure indirect effect; and $INT for the population average natural treatment-by-mediator interaction effect.
 \item{c1}{Average conversion coefficient under the experimental condition.}
 \item{sigma1.ITT}{Average standard deviation of the ITT weight discrepancy in the experimental group at the same site. It is associated with the degree to which the omissions predict response under either treatment condition.}
 \item{rho1.ITT}{Average correlation between the ITT weight discrepancy and the outcome in the experimental group at the same site. It is related to the degree to which the omissions predict the outcome within levels of the response in the experimental group.}
@@ -64,7 +64,7 @@ A list contains sensitivity parameters and the effect size of bias due to omissi
 \item{bias.INT}{Effect size of bias of the population average natural treatment-by-mediator interactioin effect due to the omissions.}
 }
 \description{
-This function is used to calculate the effect size of the hidden bias associated with one or more omitted confounders or omitted random slopes of existing confounders, based on a small number of weighting-based sensitivity parameters.
+This function is used to calculate the effect size of the hidden bias associated with one or more omitted confounders of the response-mediator, response-outcome, or mediator-outcome relationships, or omitted random slopes of existing confounders, based on a small number of weighting-based sensitivity parameters.
 }
 \examples{
 data(sim.weights)

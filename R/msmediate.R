@@ -23,7 +23,7 @@ NULL
 #' @param y The name of the outcome variable (string).
 #' @param treatment The name of the treatment variable (string).
 #' @param mediator The name of the mediator variable (string).
-#' @param X A vector of variable names (string) of pretreatment covariates, which will be included in the propensity score model. The function will treat covariates with fewer than 10 unique values as categorical variables. For now, the multilevel propensity score model only allows for one random intercept.
+#' @param X A vector of variable names (string) of pretreatment covariates, which will be included in the propensity score model. For now, the multilevel propensity score model only allows for one random intercept.
 #' @param site The variable name for the site ID (string).
 #' @return A list contains the estimates of the between-site variance of direct effect, that of indirect effect, and the correlation between the direct and indirect effects across sites ($Random_effects), and the population average direct and indirect effect estimates along with their hypothesis testing results ($Fixed_effects).
 #' @author Xu Qin and Guanglei Hong
@@ -45,18 +45,18 @@ msmediate = function(data, y, treatment, mediator, X, site) {
   colnames(data)[which(colnames(data) == y)] = "y"
   ranX = 1
   data = data[order(data$site), ]
-  # Factorize categorical covariates (with fewer than 10 categories)
-  for(i in 1:length(X)){
-    if(length(unique(data[, X[i]])) > 2 & length(unique(data[, X[i]])) < 10){
-      data[, X[i]] = as.factor(data[, X[i]])
-    }
-  }
-  covariates = model.matrix(as.formula(paste("~", paste(X, collapse = "+"))), data)[, -1]
-  data = data[, -which(colnames(data) %in% X)]
-  data = cbind(data, covariates)
+  # # Factorize categorical covariates (with fewer than 10 categories)
+  # for(i in 1:length(X)){
+  #   if(length(unique(data[, X[i]])) > 2 & length(unique(data[, X[i]])) < 10){
+  #     data[, X[i]] = as.factor(data[, X[i]])
+  #   }
+  # }
+  # covariates = model.matrix(as.formula(paste("~", paste(X, collapse = "+"))), data)[, -1]
+  # data = data[, -which(colnames(data) %in% X)]
+  # data = cbind(data, covariates)
   data1 = data[data$tr == 1, ]
   data0 = data[data$tr == 0, ]
-  X = colnames(covariates)
+  # X = colnames(covariates)
   
   l_tr = suppressWarnings({glmer(as.formula(paste("me", "~", paste(X, collapse="+"), "+(", ranX, "|site)")), data = data1, family = binomial, nAGQ = 10)})
   data$p1[data$tr == 1] = fitted(l_tr)
@@ -351,10 +351,10 @@ NULL
 #' @param treatment The name of the treatment variable (string).
 #' @param mediator The name of the mediator variable (string).
 #' @param response The name of the response variable (string), which is equal to 1 if the individual responded and 0 otherwise.
-#' @param XR1 A vector of variable names (string) of pretreatment covariates in the propensity score model for the response under the treatment condition. The function will treat covariates with fewer than 10 unique values as categorical variables. For now, the multilevel propensity score model only allows for one random intercept.
-#' @param XR0 A vector of variable names (string) of pretreatment covariates in the propensity score model for the response under the control condition. The function will treat covariates with fewer than 10 unique values as categorical variables. For now, the multilevel propensity score model only allows for one random intercept.
-#' @param XM1 A vector of variable names (string) of pretreatment covariates in the propensity score model for the mediator under the treatment condition. The function will treat covariates with fewer than 10 unique values as categorical variables. For now, the multilevel propensity score model only allows for one random intercept.
-#' @param XM0 A vector of variable names (string) of pretreatment covariates in the propensity score model for the mediator under the control condition. The function will treat covariates with fewer than 10 unique values as categorical variables. For now, the multilevel propensity score model only allows for one random intercept.
+#' @param XR1 A vector of variable names (string) of pretreatment covariates in the propensity score model for the response under the treatment condition. For now, the multilevel propensity score model only allows for one random intercept.
+#' @param XR0 A vector of variable names (string) of pretreatment covariates in the propensity score model for the response under the control condition. For now, the multilevel propensity score model only allows for one random intercept.
+#' @param XM1 A vector of variable names (string) of pretreatment covariates in the propensity score model for the mediator under the treatment condition. For now, the multilevel propensity score model only allows for one random intercept.
+#' @param XM0 A vector of variable names (string) of pretreatment covariates in the propensity score model for the mediator under the control condition. For now, the multilevel propensity score model only allows for one random intercept.
 #' @param site The variable name for the site ID (string).
 #' @param sample.weight The variable name for the sample weight given by design (string).
 #' @return A list contains the estimates of the between-site variances of natural direct effect, natural indirect effect, pure indirect effect, and treatment-by-mediator interaction effect, and the correlations between the effects across sites ($Random_effects), and the population average effect estimates along with their hypothesis testing results ($Fixed_effects).
@@ -380,31 +380,31 @@ msmediate.weights = function(data, y, treatment, mediator, response, XR1, XR0, X
   colnames(data)[which(colnames(data) == site)] = "site"
   colnames(data)[which(colnames(data) == sample.weight)] = "WD"
   data = data[order(data$site), ]
-  # Factorize categorical covariates (with fewer than 10 categories)
-  transform = function(X){
-    for(i in 1:length(X)){
-      if(length(unique(data[, X[i]])) > 2 & length(unique(data[, X[i]])) < 10){
-        data[, X[i]] = as.factor(data[, X[i]])
-      }
-    }
-    covariates = model.matrix(as.formula(paste("~", paste(X, collapse = "+"))), data)
-    X = colnames(covariates)
-    return(list(covariates = covariates[, -1], X = X[-1]))
-  }
-  transform.XR1 = transform(XR1)
-  transform.XR0 = transform(XR0)
-  transform.XM1 = transform(XM1)
-  transform.XM0 = transform(XM0)
-  data = data[, -which(colnames(data) %in% unique(c(XR1, XR0, XM1, XM0)))]
-  XR1 = transform.XR1$X
-  XR0 = transform.XR0$X
-  XM1 = transform.XM1$X
-  XM0 = transform.XM0$X
-  covariates = cbind(transform.XR1$covariates, transform.XR0$covariates, transform.XM1$covariates, transform.XM0$covariates)
-  colnames(covariates) = c(XR1, XR0, XM1, XM0)
-  data = cbind(data, covariates)
-  data = data[, colnames(unique(as.matrix(data), MARGIN = 2))] 
-  
+  # # Factorize categorical covariates (with fewer than 10 categories)
+  # transform = function(X){
+  #   for(i in 1:length(X)){
+  #     if(length(unique(data[, X[i]])) > 2 & length(unique(data[, X[i]])) < 10){
+  #       data[, X[i]] = as.factor(data[, X[i]])
+  #     }
+  #   }
+  #   covariates = model.matrix(as.formula(paste("~", paste(X, collapse = "+"))), data)
+  #   X = colnames(covariates)
+  #   return(list(covariates = covariates[, -1], X = X[-1]))
+  # }
+  # transform.XR1 = transform(XR1)
+  # transform.XR0 = transform(XR0)
+  # transform.XM1 = transform(XM1)
+  # transform.XM0 = transform(XM0)
+  # data = data[, -which(colnames(data) %in% unique(c(XR1, XR0, XM1, XM0)))]
+  # XR1 = transform.XR1$X
+  # XR0 = transform.XR0$X
+  # XM1 = transform.XM1$X
+  # XM0 = transform.XM0$X
+  # covariates = cbind(transform.XR1$covariates, transform.XR0$covariates, transform.XM1$covariates, transform.XM0$covariates)
+  # colnames(covariates) = c(XR1, XR0, XM1, XM0)
+  # data = cbind(data, covariates)
+  # data = data[, colnames(unique(as.matrix(data), MARGIN = 2))] 
+  # 
   ######## Separate the data set into two, one for the treatment group and the other for the control group.
   data1 = data[data$tr == 1, ]
   data0 = data[data$tr == 0, ]
@@ -705,7 +705,7 @@ msmediate.weights = function(data, y, treatment, mediator, response, XR1, XR0, X
 #' @param y The name of the outcome variable (string).
 #' @param treatment The name of the treatment variable (string).
 #' @param mediator The name of the mediator variable (string).
-#' @param X A vector of variable names (string) of pretreatment covariates, which will be included in the propensity score model. The function will treat covariates with fewer than 10 unique values as categorical variables. For now, the multilevel propensity score model only allows for one random intercept.
+#' @param X A vector of variable names (string) of pretreatment covariates, which will be included in the propensity score model. For now, the multilevel propensity score model only allows for one random intercept.
 #' @param site The variable name for the site ID (string).
 #' @param npermute The number of permutations for the permutation test. The default value is 200. It may take a long time, depending on the sample size and the length of X.
 #' @return A list contains the hypothesis testing results of the between-site variance of the causal effects, besides the same output as given by the function msmediate().
@@ -727,16 +727,16 @@ vartest.msmediate = function(data, y, treatment, mediator, X, site, npermute = 2
   colnames(data)[which(colnames(data) == site)] = "site"
   colnames(data)[which(colnames(data) == y)] = "y"
   
-  # Factorize categorical covariates (with fewer than 10 categories)
-  for(i in 1:length(X)){
-    if(length(unique(data[, X[i]])) > 2 & length(unique(data[, X[i]])) < 10){
-      data[, X[i]] = as.factor(data[, X[i]])
-    }
-  }
-  covariates = model.matrix(as.formula(paste("~", paste(X, collapse = "+"))), data)[, -1]
-  data = data[, -which(colnames(data) %in% X)]
-  data = cbind(data, covariates)
-  X = colnames(covariates)
+  # # Factorize categorical covariates (with fewer than 10 categories)
+  # for(i in 1:length(X)){
+  #   if(length(unique(data[, X[i]])) > 2 & length(unique(data[, X[i]])) < 10){
+  #     data[, X[i]] = as.factor(data[, X[i]])
+  #   }
+  # }
+  # covariates = model.matrix(as.formula(paste("~", paste(X, collapse = "+"))), data)[, -1]
+  # data = data[, -which(colnames(data) %in% X)]
+  # data = cbind(data, covariates)
+  # X = colnames(covariates)
   
   est = function(data, y, treatment, mediator, X, site, permutation = F){
     ranX = 1
@@ -1064,10 +1064,10 @@ vartest.msmediate = function(data, y, treatment, mediator, X, site, npermute = 2
 #' @param treatment The name of the treatment variable (string).
 #' @param mediator The name of the mediator variable (string).
 #' @param response The name of the response variable (string), which is equal to 1 if the individual responded and 0 otherwise.
-#' @param XR1 A vector of variable names (string) of pretreatment covariates in the propensity score model for the response under the treatment condition. The function will treat covariates with fewer than 10 unique values as categorical variables. For now, the multilevel propensity score model only allows for one random intercept.
-#' @param XR0 A vector of variable names (string) of pretreatment covariates in the propensity score model for the response under the control condition. The function will treat covariates with fewer than 10 unique values as categorical variables. For now, the multilevel propensity score model only allows for one random intercept.
-#' @param XM1 A vector of variable names (string) of pretreatment covariates in the propensity score model for the mediator under the treatment condition. The function will treat covariates with fewer than 10 unique values as categorical variables. For now, the multilevel propensity score model only allows for one random intercept.
-#' @param XM0 A vector of variable names (string) of pretreatment covariates in the propensity score model for the mediator under the control condition. The function will treat covariates with fewer than 10 unique values as categorical variables. For now, the multilevel propensity score model only allows for one random intercept.
+#' @param XR1 A vector of variable names (string) of pretreatment covariates in the propensity score model for the response under the treatment condition. For now, the multilevel propensity score model only allows for one random intercept.
+#' @param XR0 A vector of variable names (string) of pretreatment covariates in the propensity score model for the response under the control condition. For now, the multilevel propensity score model only allows for one random intercept.
+#' @param XM1 A vector of variable names (string) of pretreatment covariates in the propensity score model for the mediator under the treatment condition. For now, the multilevel propensity score model only allows for one random intercept.
+#' @param XM0 A vector of variable names (string) of pretreatment covariates in the propensity score model for the mediator under the control condition. For now, the multilevel propensity score model only allows for one random intercept.
 #' @param site The variable name for the site ID (string).
 #' @param sample.weight The variable name for the sample weight given by design (string).
 #' @param npermute The number of permutations for the permutation test. The default value is 200. It may take a long time, depending on the sample size and the length of X.
@@ -1094,31 +1094,31 @@ vartest.msmediate.weights = function(data, y, treatment, mediator, response, XR1
   colnames(data)[which(colnames(data) == site)] = "site"
   colnames(data)[which(colnames(data) == sample.weight)] = "WD"
   
-  # Factorize categorical covariates (with fewer than 10 categories)
-  transform = function(X){
-    for(i in 1:length(X)){
-      if(length(unique(data[, X[i]])) > 2 & length(unique(data[, X[i]])) < 10){
-        data[, X[i]] = as.factor(data[, X[i]])
-      }
-    }
-    covariates = model.matrix(as.formula(paste("~", paste(X, collapse = "+"))), data)
-    X = colnames(covariates)
-    return(list(covariates = covariates[, -1], X = X[-1]))
-  }
-  transform.XR1 = transform(XR1)
-  transform.XR0 = transform(XR0)
-  transform.XM1 = transform(XM1)
-  transform.XM0 = transform(XM0)
-  data = data[, -which(colnames(data) %in% unique(c(XR1, XR0, XM1, XM0)))]
-  XR1 = transform.XR1$X
-  XR0 = transform.XR0$X
-  XM1 = transform.XM1$X
-  XM0 = transform.XM0$X
-  covariates = cbind(transform.XR1$covariates, transform.XR0$covariates, transform.XM1$covariates, transform.XM0$covariates)
-  colnames(covariates) = c(XR1, XR0, XM1, XM0)
-  data = cbind(data, covariates)
-  data = data[, colnames(unique(as.matrix(data), MARGIN = 2))] 
-  
+  # # Factorize categorical covariates (with fewer than 10 categories)
+  # transform = function(X){
+  #   for(i in 1:length(X)){
+  #     if(length(unique(data[, X[i]])) > 2 & length(unique(data[, X[i]])) < 10){
+  #       data[, X[i]] = as.factor(data[, X[i]])
+  #     }
+  #   }
+  #   covariates = model.matrix(as.formula(paste("~", paste(X, collapse = "+"))), data)
+  #   X = colnames(covariates)
+  #   return(list(covariates = covariates[, -1], X = X[-1]))
+  # }
+  # transform.XR1 = transform(XR1)
+  # transform.XR0 = transform(XR0)
+  # transform.XM1 = transform(XM1)
+  # transform.XM0 = transform(XM0)
+  # data = data[, -which(colnames(data) %in% unique(c(XR1, XR0, XM1, XM0)))]
+  # XR1 = transform.XR1$X
+  # XR0 = transform.XR0$X
+  # XM1 = transform.XM1$X
+  # XM0 = transform.XM0$X
+  # covariates = cbind(transform.XR1$covariates, transform.XR0$covariates, transform.XM1$covariates, transform.XM0$covariates)
+  # colnames(covariates) = c(XR1, XR0, XM1, XM0)
+  # data = cbind(data, covariates)
+  # data = data[, colnames(unique(as.matrix(data), MARGIN = 2))] 
+   
   est = function(data, y, treatment, mediator, response, XR1, XR0, XM1, XM0, site, sample.weight, permutation = F){
     data = data[order(data$site), ]
     ######## Separate the data set into two, one for the treatment group and the other for the control group.
@@ -1459,10 +1459,10 @@ vartest.msmediate.weights = function(data, y, treatment, mediator, response, XR1
 #' @param treatment The name of the treatment variable (string).
 #' @param mediator The name of the mediator variable (string).
 #' @param response The name of the response variable (string), which is equal to 1 if the individual responded and 0 otherwise.
-#' @param XR1 A vector of variable names (string) of pretreatment covariates in the propensity score model for the response under the treatment condition. The function will treat covariates with fewer than 10 unique values as categorical variables. For now, the multilevel propensity score model only allows for one random intercept.
-#' @param XR0 A vector of variable names (string) of pretreatment covariates in the propensity score model for the response under the control condition. The function will treat covariates with fewer than 10 unique values as categorical variables. For now, the multilevel propensity score model only allows for one random intercept.
-#' @param XM1 A vector of variable names (string) of pretreatment covariates in the propensity score model for the mediator under the treatment condition. The function will treat covariates with fewer than 10 unique values as categorical variables. For now, the multilevel propensity score model only allows for one random intercept.
-#' @param XM0 A vector of variable names (string) of pretreatment covariates in the propensity score model for the mediator under the control condition. The function will treat covariates with fewer than 10 unique values as categorical variables. For now, the multilevel propensity score model only allows for one random intercept.
+#' @param XR1 A vector of variable names (string) of pretreatment covariates in the propensity score model for the response under the treatment condition. For now, the multilevel propensity score model only allows for one random intercept.
+#' @param XR0 A vector of variable names (string) of pretreatment covariates in the propensity score model for the response under the control condition. For now, the multilevel propensity score model only allows for one random intercept.
+#' @param XM1 A vector of variable names (string) of pretreatment covariates in the propensity score model for the mediator under the treatment condition. For now, the multilevel propensity score model only allows for one random intercept.
+#' @param XM0 A vector of variable names (string) of pretreatment covariates in the propensity score model for the mediator under the control condition. For now, the multilevel propensity score model only allows for one random intercept.
 #' @param X A vector of variable names (string) of all the pretreatment covariates to be checked balance for.
 #' @param site The variable name for the site ID (string).
 #' @return A list of tables containing the balance checking results for the response before weighting ($balance.R$balance1 under the treatment condition and $balance.R$balance0 under the control condition) and after weighting ($balance.R$balance1.adj under the treatment condition and $balance.R$balance0.adj under the control condition); and the balance checking results for the mediator before weighting ($balance.M$balance1 under the treatment condition and $balance.M$balance0 under the control condition) and after weighting ($balance.M$balance1.adj under the treatment condition and $balance.M$balance0.adj under the control condition). It also contains a set of balance checking plots corresponding to the tables.
@@ -1489,30 +1489,30 @@ balance = function(data, y, treatment, mediator, response, XR1, XR0, XM1, XM0, X
   colnames(data)[which(colnames(data) == response)] = "R"
   colnames(data)[which(colnames(data) == site)] = "site"
   data = data[order(data$site), ]
-  # Factorize categorical covariates (with fewer than 10 categories)
-  transform = function(X){
-    for(i in 1:length(X)){
-      if(length(unique(data[, X[i]])) > 2 & length(unique(data[, X[i]])) < 10){
-        data[, X[i]] = as.factor(data[, X[i]])
-      }
-    }
-    covariates = model.matrix(as.formula(paste("~", paste(X, collapse = "+"))), data)
-    X = colnames(covariates)
-    return(list(covariates = covariates[, -1], X = X[-1]))
-  }
-  transform.XR1 = transform(XR1)
-  transform.XR0 = transform(XR0)
-  transform.XM1 = transform(XM1)
-  transform.XM0 = transform(XM0)
-  data = data[, -which(colnames(data) %in% unique(c(XR1, XR0, XM1, XM0)))]
-  XR1 = transform.XR1$X
-  XR0 = transform.XR0$X
-  XM1 = transform.XM1$X
-  XM0 = transform.XM0$X
-  covariates = cbind(transform.XR1$covariates, transform.XR0$covariates, transform.XM1$covariates, transform.XM0$covariates)
-  colnames(covariates) = c(XR1, XR0, XM1, XM0)
-  data = cbind(data, covariates)
-  data = data[, colnames(unique(as.matrix(data), MARGIN = 2))] 
+  # # Factorize categorical covariates (with fewer than 10 categories)
+  # transform = function(X){
+  #   for(i in 1:length(X)){
+  #     if(length(unique(data[, X[i]])) > 2 & length(unique(data[, X[i]])) < 10){
+  #       data[, X[i]] = as.factor(data[, X[i]])
+  #     }
+  #   }
+  #   covariates = model.matrix(as.formula(paste("~", paste(X, collapse = "+"))), data)
+  #   X = colnames(covariates)
+  #   return(list(covariates = covariates[, -1], X = X[-1]))
+  # }
+  # transform.XR1 = transform(XR1)
+  # transform.XR0 = transform(XR0)
+  # transform.XM1 = transform(XM1)
+  # transform.XM0 = transform(XM0)
+  # data = data[, -which(colnames(data) %in% unique(c(XR1, XR0, XM1, XM0)))]
+  # XR1 = transform.XR1$X
+  # XR0 = transform.XR0$X
+  # XM1 = transform.XM1$X
+  # XM0 = transform.XM0$X
+  # covariates = cbind(transform.XR1$covariates, transform.XR0$covariates, transform.XM1$covariates, transform.XM0$covariates)
+  # colnames(covariates) = c(XR1, XR0, XM1, XM0)
+  # data = cbind(data, covariates)
+  # data = data[, colnames(unique(as.matrix(data), MARGIN = 2))] 
   data1 = data[data$tr == 1, ]
   data0 = data[data$tr == 0, ]
   
@@ -1595,8 +1595,9 @@ balance = function(data, y, treatment, mediator, response, XR1, XR0, XM1, XM0, X
     meandiff = balance[, 1]
     min = balance[, 3]
     max = balance[, 4]
-    balance = cbind.data.frame(covariates = rownames(balance), meandiff = meandiff, min = min, max = max)
-    balance$covariates = factor(balance$covariates, levels = rownames(balance)[order(abs(meandiff))])
+    covariates = rownames(balance)
+    covariates = factor(covariates, levels = rownames(balance)[order(abs(meandiff))])
+    balance = cbind.data.frame(covariates = covariates, meandiff = meandiff, min = min, max = max)
     
     ggplot(balance, aes(meandiff, covariates)) +
       geom_errorbarh(aes(y = covariates, x = meandiff, xmin = min, xmax = max), data = balance, col="grey", size=1.2) +
@@ -1630,26 +1631,26 @@ balance = function(data, y, treatment, mediator, response, XR1, XR0, XM1, XM0, X
   )
 }
 
-#' Sensitivity analysis for causal mediation analysis in multisite trials  
+#' Sensitivity analysis for causal mediation analysis in multisite trials in the presence of complex sample and survey designs and non-random nonresponse 
 #'
-#' This function is used to calculate the effect size of the hidden bias associated with one or more omitted confounders or omitted random slopes of existing confounders, based on a small number of weighting-based sensitivity parameters. 
+#' This function is used to calculate the effect size of the hidden bias associated with one or more omitted confounders of the response-mediator, response-outcome, or mediator-outcome relationships, or omitted random slopes of existing confounders, based on a small number of weighting-based sensitivity parameters. 
 #'
 #' @param data The data set for analysis.
 #' @param y The name of the outcome variable (string).
 #' @param treatment The name of the treatment variable (string).
 #' @param mediator The name of the mediator variable (string).
 #' @param response The name of the response variable (string), which is equal to 1 if the individual responded and 0 otherwise.
-#' @param XR1 A vector of variable names (string) of pretreatment covariates in the propensity score model for the response under the treatment condition in the original analysis. The function will treat covariates with fewer than 10 unique values as categorical variables. For now, the multilevel propensity score model only allows for one random intercept.
-#' @param XR0 A vector of variable names (string) of pretreatment covariates in the propensity score model for the response under the control condition in the original analysis. The function will treat covariates with fewer than 10 unique values as categorical variables. For now, the multilevel propensity score model only allows for one random intercept.
-#' @param XM1 A vector of variable names (string) of pretreatment covariates in the propensity score model for the mediator under the treatment condition in the original analysis. The function will treat covariates with fewer than 10 unique values as categorical variables. For now, the multilevel propensity score model only allows for one random intercept.
-#' @param XM0 A vector of variable names (string) of pretreatment covariates in the propensity score model for the mediator under the control condition in the original analysis. The function will treat covariates with fewer than 10 unique values as categorical variables. For now, the multilevel propensity score model only allows for one random intercept.
+#' @param XR1 A vector of variable names (string) of pretreatment covariates in the propensity score model for the response under the treatment condition in the original analysis. For now, the multilevel propensity score model only allows for one random intercept.
+#' @param XR0 A vector of variable names (string) of pretreatment covariates in the propensity score model for the response under the control condition in the original analysis. For now, the multilevel propensity score model only allows for one random intercept.
+#' @param XM1 A vector of variable names (string) of pretreatment covariates in the propensity score model for the mediator under the treatment condition in the original analysis. For now, the multilevel propensity score model only allows for one random intercept.
+#' @param XM0 A vector of variable names (string) of pretreatment covariates in the propensity score model for the mediator under the control condition in the original analysis. For now, the multilevel propensity score model only allows for one random intercept.
 #' @param omit.X A vector of variable names (string) of omitted pretreatment confounders of the response-mediator, response-outcome, or mediator-outcome relationships.
 #' @param ran.omit.X A vector of variable names (string) of pretreatment covariates that have been included in the original analysis but whose random slopes are omitted from response models or mediator models in the original analysis. It takes value 1 if there are no omitted random slopes.
 #' @param site The variable name for the site ID (string).
-#' @return A list contains sensitivity parameters and the effect size of bias due to omission of pretreatment confounders ($`Bias due to omission of confounders) or random slopes ($`Bias due to omission of random slopes) for each causal parameter ($ITT for the population average ITT effect, $var.ITT for the between-site variance of ITT effect; $NIE for the population average natural indirect effect, $var.NIE for the between-site variance of natural indirect effect; $NDE for the population average natural direct effect, $var.NDE for the between-site variance of natural direct effect; $cov.NIE.NDE for the between-site covariance between natural indirect and direct effects; $PIE for the population average pure indirect effect; and $ INT for the population average natural treatment-by-mediator interaction effect.
+#' @return A list contains sensitivity parameters and the effect size of bias due to omission of pretreatment confounders ($Bias due to omission of confounders) or random slopes ($Bias due to omission of random slopes) for each causal parameter ($ITT for the population average ITT effect, $var.ITT for the between-site variance of ITT effect; $NIE for the population average natural indirect effect, $var.NIE for the between-site variance of natural indirect effect; $NDE for the population average natural direct effect, $var.NDE for the between-site variance of natural direct effect; $cov.NIE.NDE for the between-site covariance between natural indirect and direct effects; $PIE for the population average pure indirect effect; and $INT for the population average natural treatment-by-mediator interaction effect.
 #' \item{c1}{Average conversion coefficient under the experimental condition.}
 #' \item{sigma1.ITT}{Average standard deviation of the ITT weight discrepancy in the experimental group at the same site. It is associated with the degree to which the omissions predict response under either treatment condition.}
-#' \item{rho1.ITT}{Average correlation between the ITT weight discrepancy and the outcome in the experimental group at the same site. It is related to the degree to which the omissions predict the outcome within levels of the response in the experimental group.}
+#' \item{rho1.ITT}{Average correlation between the ITT weight discrepancy and the outcome in the experimental group at the same site. It is related to the degree to which the omissions predict the outcome within levels of the response under either treatment condition.}
 #' \item{cov.sigma1.rho1.ITT}{Covariance between site-specific sigma1.ITT and rho1.ITT.}
 #' \item{c0}{Average conversion coefficient under the control condition.}
 #' \item{sigma0.ITT}{Average standard deviation of the ITT weight discrepancy in the control group at the same site.}
@@ -1660,7 +1661,7 @@ balance = function(data, y, treatment, mediator, response, XR1, XR0, XM1, XM0, X
 #' \item{cov.b.ITT.c.sigma.rho}{Covariance between the effect size of site-specific ITT and the effect size of bias for site-specific ITT.}
 #' \item{bias.var.ITT}{Effect size of bias of the between-site variance of the ITT effect due to the omissions.}
 #' \item{sigma.counter}{Average standard deviation of the overal weight (product of the ITT weight and the RMPW weight) discrepancy in the experimental group at the same site. It is associated with the degree to which the omissions predict both response and mediator value assignment under either treatment condition.}
-#' \item{rho.counter}{Average correlation between the overall weight (product of the ITT weight and the RMPW weight) discrepancy and the outcome in the experimental group at the same site. It is related to the degree to which the omissions predict the outcome within levels of the response and mediator in the experimental group.}
+#' \item{rho.counter}{Average correlation between the overall weight (product of the ITT weight and the RMPW weight) discrepancy and the outcome in the experimental group at the same site. It is related to the degree to which the omissions predict the outcome within levels of the response and mediator under either treatment condition.}
 #' \item{cov.sigma.rho.counter}{Covariance between site-specific sigma.counter and rho.counter.}
 #' \item{bias.NIE}{Effect size of bias of the population average natural indirect effect due to the omissions.}
 #' \item{var.c.sigma.rho.NIE}{Between-site variance of the effect size of bias for site-specific NIE.}
@@ -1694,30 +1695,30 @@ sensitivity = function(data, y, treatment, mediator, response, XR1, XR0, XM1, XM
   colnames(data)[which(colnames(data) == response)] = "R"
   colnames(data)[which(colnames(data) == site)] = "site"
   data = data[order(data$site), ]
-  # Factorize categorical covariates (with fewer than 10 categories)
-  transform = function(X){
-    for(i in 1:length(X)){
-      if(length(unique(data[, X[i]])) > 2 & length(unique(data[, X[i]])) < 10){
-        data[, X[i]] = as.factor(data[, X[i]])
-      }
-    }
-    covariates = model.matrix(as.formula(paste("~", paste(X, collapse = "+"))), data)
-    X = colnames(covariates)
-    return(list(covariates = covariates[, -1], X = X[-1]))
-  }
-  transform.XR1 = transform(XR1)
-  transform.XR0 = transform(XR0)
-  transform.XM1 = transform(XM1)
-  transform.XM0 = transform(XM0)
-  data = data[, -which(colnames(data) %in% unique(c(XR1, XR0, XM1, XM0)))]
-  XR1 = transform.XR1$X
-  XR0 = transform.XR0$X
-  XM1 = transform.XM1$X
-  XM0 = transform.XM0$X
-  covariates = cbind(transform.XR1$covariates, transform.XR0$covariates, transform.XM1$covariates, transform.XM0$covariates)
-  colnames(covariates) = c(XR1, XR0, XM1, XM0)
-  data = cbind(data, covariates)
-  data = data[, colnames(unique(as.matrix(data), MARGIN = 2))] 
+  # # Factorize categorical covariates (with fewer than 10 categories)
+  # transform = function(X){
+  #   for(i in 1:length(X)){
+  #     if(length(unique(data[, X[i]])) > 2 & length(unique(data[, X[i]])) < 10){
+  #       data[, X[i]] = as.factor(data[, X[i]])
+  #     }
+  #   }
+  #   covariates = model.matrix(as.formula(paste("~", paste(X, collapse = "+"))), data)
+  #   X = colnames(covariates)
+  #   return(list(covariates = covariates[, -1], X = X[-1]))
+  # }
+  # transform.XR1 = transform(XR1)
+  # transform.XR0 = transform(XR0)
+  # transform.XM1 = transform(XM1)
+  # transform.XM0 = transform(XM0)
+  # data = data[, -which(colnames(data) %in% unique(c(XR1, XR0, XM1, XM0)))]
+  # XR1 = transform.XR1$X
+  # XR0 = transform.XR0$X
+  # XM1 = transform.XM1$X
+  # XM0 = transform.XM0$X
+  # covariates = cbind(transform.XR1$covariates, transform.XR0$covariates, transform.XM1$covariates, transform.XM0$covariates)
+  # colnames(covariates) = c(XR1, XR0, XM1, XM0)
+  # data = cbind(data, covariates)
+  # data = data[, colnames(unique(as.matrix(data), MARGIN = 2))] 
   
   ######## Separate the data set into two, one for the treatment group and the other for the control group.
   data1 = data[data$tr == 1, ]
